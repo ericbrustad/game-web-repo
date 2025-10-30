@@ -1,0 +1,26 @@
+{
+  "ui": { "continueLabel": "Continue", "completeLabel": "Proceed", "finishLabel": "Done" },
+  "missions": [
+    {
+      "id": "m1",
+      "title": "Downtown Briefcase",
+      "ui": { "completeTitle": "Mission 1 Complete", "completeMessage": "Nice work!" },
+      "overlays": [
+        { "id": "note", "type": "text", "coordinates": [-93.265, 44.978], "radius": 120,
+          "dialog": { "title": "Heads up", "text": "Check the plaza near Nicollet Mall.", "continueLabel": "Got it" } },
+        { "id": "quiz1", "type": "text", "coordinates": [-93.267, 44.979], "radius": 100,
+          "prompt": { "id": "q1", "title": "Checkpoint", "question": "What color is the X?", "correct": "blue", "continueLabel": "Answer" } }
+      ],
+      "prompts": [{ "id": "q1", "required": true }]
+    },
+    {
+      "id": "m2",
+      "title": "Warehouse Finish",
+      "overlays": [
+        { "id": "finish", "type": "text", "coordinates": [-93.269, 44.9752], "radius": 120,
+          "dialog": { "title": "Finale", "text": "You found the briefcase!" } }
+      ],
+      "prompts": []
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+name: "Map quality / UX task"
+description: Track a map-related improvement against our best practices
+labels: ["map", "quality"]
+body:
+  - type: textarea
+    attributes:
+      label: What to improve
+      description: Describe the issue or UX to fix.
+  - type: checkboxes
+    attributes:
+      label: Practices to apply
+      options:
+        - label: Use one Map instance (no re-init)
+        - label: Rings as GeoJSON source+line layer
+        - label: Overlay DOM is pointer-events:none
+        - label: Click-catcher + unproject for simulate
+        - label: Dialogs portal to body (z≥10000)
+        - label: Update sources with setData (no churn)
+        - label: Keep engine badge under DEBUG_UI only
+  - type: textarea
+    attributes:
+      label: Acceptance check
+      description: Paste the relevant items from docs/game-map-acceptance-checklist.md you validated.

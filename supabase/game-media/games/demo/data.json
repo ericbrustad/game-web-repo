@@ -1,0 +1,107 @@
+{
+  "ui": {
+    "continueLabel": "Continue",
+    "completeLabel": "Mission Complete",
+    "finishLabel": "Done",
+    "simulate": true,
+    "showRings": true,
+    "splash": {
+      "title": "Welcome Agent",
+      "message": "Your mission awaits. Click anywhere in a ring to begin.",
+      "audio": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Jet_flyby.wav",
+      "continueLabel": "Enter Zone"
+    },
+    "audio": {
+      "enabled": true,
+      "fxVolume": 0.9,
+      "musicVolume": 0.6
+    }
+  },
+  "missions": [
+    {
+      "id": "m1",
+      "title": "Unauthorized Zone — Nicollet",
+      "overlays": [
+        {
+          "id": "unauth-entry",
+          "type": "text",
+          "coordinates": [-93.2655, 44.9795],
+          "radius": 180,
+          "dialog": {
+            "title": "You Have Entered an Unauthorized Area",
+            "text": "This zone is off-limits. An alarm is triggered!",
+            "fx": "https://upload.wikimedia.org/wikipedia/commons/1/15/Police-siren.wav",
+            "continueLabel": "Proceed at Own Risk"
+          }
+        },
+        {
+          "id": "unauth-response",
+          "type": "multiple_choice",
+          "coordinates": [-93.2655, 44.9795],
+          "radius": 180,
+          "prompt": {
+            "id": "choice",
+            "question": "You’ve been seen. What do you want to do?",
+            "choices": ["Run", "Hide", "Attack"],
+            "correct": "any",
+            "continueLabel": "Confirm Action"
+          },
+          "after": {
+            "type": "reset-map",
+            "center": [-93.2655, 44.9795],
+            "zoom": 15
+          }
+        }
+      ],
+      "prompts": [
+        { "id": "choice", "required": true }
+      ]
+    },
+    {
+      "id": "m2",
+      "title": "Checkpoint — Warehouse",
+      "overlays": [
+        {
+          "id": "m2-ring",
+          "type": "text",
+          "coordinates": [-93.2682, 44.9771],
+          "radius": 160,
+          "dialog": {
+            "title": "Checkpoint",
+            "text": "Area clear. Awaiting instructions...",
+            "continueLabel": "Proceed"
+          },
+          "after": {
+            "type": "reset-map",
+            "center": [-93.2682, 44.9771],
+            "zoom": 15
+          }
+        }
+      ],
+      "prompts": []
+    },
+    {
+      "id": "m3",
+      "title": "Extraction Point — Riverfront",
+      "overlays": [
+        {
+          "id": "m3-ring",
+          "type": "text",
+          "coordinates": [-93.2707, 44.9751],
+          "radius": 180,
+          "dialog": {
+            "title": "Extraction Point",
+            "text": "Approach the vehicle for immediate extraction.",
+            "continueLabel": "Board Vehicle"
+          },
+          "after": {
+            "type": "reset-map",
+            "center": [-93.2707, 44.9751],
+            "zoom": 15
+          }
+        }
+      ],
+      "prompts": []
+    }
+  ]
+}

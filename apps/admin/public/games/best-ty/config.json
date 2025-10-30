@@ -1,0 +1,18 @@
+{
+  "splash": {
+    "enabled": true,
+    "mode": "single"
+  },
+  "game": {
+    "title": "best ty",
+    "type": "Mystery",
+    "tags": [
+      "best-ty"
+    ],
+    "coverImage": ""
+  },
+  "forms": {
+    "players": 1
+  },
+  "textRules": []
+}

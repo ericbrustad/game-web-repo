@@ -1,0 +1,48 @@
+{
+  "splash": {
+    "enabled": true,
+    "mode": "single"
+  },
+  "game": {
+    "title": "test",
+    "type": "Mystery",
+    "tags": [
+      "test"
+    ],
+    "coverImage": ""
+  },
+  "forms": {
+    "players": 1
+  },
+  "timer": {
+    "durationMinutes": 0,
+    "alertMinutes": 10
+  },
+  "textRules": [],
+  "devices": [],
+  "powerups": [],
+  "media": {},
+  "icons": {
+    "missions": [
+      {
+        "key": "missions-1",
+        "name": "",
+        "url": "/media/mediapool/Images/icons/1759642918386-SMOKE BOMB.png"
+      }
+    ],
+    "devices": [],
+    "rewards": []
+  },
+  "appearance": {
+    "fontFamily": "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+    "fontSizePx": 22,
+    "fontColor": "#ffffff",
+    "textBgColor": "#000000",
+    "textBgOpacity": 0,
+    "screenBgColor": "#000000",
+    "screenBgOpacity": 0,
+    "screenBgImage": "",
+    "textAlign": "center",
+    "textVertical": "top"
+  }
+}

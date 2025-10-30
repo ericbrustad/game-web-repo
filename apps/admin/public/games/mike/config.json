@@ -1,0 +1,23 @@
+{
+  "splash": {
+    "enabled": true,
+    "mode": "single"
+  },
+  "game": {
+    "title": "mike",
+    "type": "Chase",
+    "tags": [
+      "mike"
+    ],
+    "coverImage": ""
+  },
+  "forms": {
+    "players": 1
+  },
+  "timer": {
+    "durationMinutes": 0,
+    "alertMinutes": 10
+  },
+  "textRules": [],
+  "powerups": []
+}

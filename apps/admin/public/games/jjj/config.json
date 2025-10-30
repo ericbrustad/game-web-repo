@@ -1,0 +1,18 @@
+{
+  "splash": {
+    "enabled": true,
+    "mode": "single"
+  },
+  "game": {
+    "title": "jjj",
+    "type": "Mystery",
+    "tags": [
+      "jjj"
+    ],
+    "coverImage": ""
+  },
+  "forms": {
+    "players": 1
+  },
+  "textRules": []
+}
