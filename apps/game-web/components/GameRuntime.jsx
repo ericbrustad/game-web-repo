@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { BackpackButton, SettingsButton } from "./ui/CornerButtons";
@@ -7,9 +7,11 @@ import Modal from "./ui/Modal";
 import { on, Events, emit } from "../lib/eventBus";
 import { showBanner } from "./ui/Banner";
 import DevPanel from "./ui/DevPanel";
+import { HIDE_DEMO_COPY } from "../lib/flags";
 
 const GameMap = dynamic(() => import("./GameMap"), { ssr: false });
 
+const sanitizeCopy = (value)=> (typeof value === "string" ? value.trim() : "");
 // Helpers to pull labels from overlay/mission/bundle or default
 function labelFrom(paths, fallback="Continue") {
   for (const p of paths) {
@@ -55,6 +57,43 @@ export default function GameRuntime(){
   //   overlay, prompt, mission, fields...
   //   value, continueLabel
   // }
+
+  const goToNextMission = useCallback(() => {
+    if (mi + 1 < missions.length) {
+      const next = mi + 1;
+      setMi(next);
+      const init = {};
+      const nextPrompts = Array.isArray(missions[next]?.prompts) ? missions[next].prompts : [];
+      for (const p of nextPrompts) {
+        if (p && p.id) init[p.id] = null;
+      }
+      setAnswers(init);
+      setGameFinished(false);
+      setModal(null);
+    } else {
+      const finishTitle = sanitizeCopy(bundle?.ui?.finishTitle);
+      const finishMessage = sanitizeCopy(bundle?.ui?.finishMessage);
+      const finishLabelCandidate = labelFrom([
+        bundle?.ui?.finishLabel
+      ], HIDE_DEMO_COPY ? '' : 'Close');
+      const finishLabel = finishLabelCandidate || (HIDE_DEMO_COPY ? '' : 'Close');
+      setGameFinished(true);
+      if (!finishTitle && !finishMessage && !finishLabel) {
+        setModal(null);
+        return;
+      }
+      if (!finishLabel) {
+        setModal(null);
+        return;
+      }
+      setModal({
+        type: 'finished',
+        title: finishTitle,
+        message: finishMessage,
+        continueLabel: finishLabel
+      });
+    }
+  }, [mi, missions, bundle]);
 
   // Load mission bundle
   useEffect(()=>{
@@ -201,15 +240,29 @@ export default function GameRuntime(){
     if (gameFinished) return;
     if (modal && modal.type !== "complete" && modal.type !== "finished") return;
     if (modal?.type === "complete" || modal?.type === "finished") return;
-    const continueLabel = labelFrom([currentMission?.ui?.completeLabel, bundle?.ui?.completeLabel, "Continue"]);
+    const title = sanitizeCopy(currentMission?.ui?.completeTitle);
+    const message = sanitizeCopy(currentMission?.ui?.completeMessage);
+    const continueLabelCandidate = labelFrom([
+      currentMission?.ui?.completeLabel,
+      bundle?.ui?.completeLabel
+    ], HIDE_DEMO_COPY ? "" : "Continue");
+    const continueLabel = continueLabelCandidate || (HIDE_DEMO_COPY ? "" : "Continue");
+    if (!title && !message && !continueLabel) {
+      goToNextMission();
+      return;
+    }
+    if (!continueLabel) {
+      goToNextMission();
+      return;
+    }
     setModal({
       type: "complete",
       mission: currentMission,
-      title: currentMission?.ui?.completeTitle || "Mission Complete",
-      message: currentMission?.ui?.completeMessage || "Great work!",
+      title,
+      message,
       continueLabel
     });
-  }, [complete, currentMission, bundle, modal, gameFinished]);
+  }, [complete, currentMission, bundle, modal, gameFinished, goToNextMission]);
 
   // Handlers
   const onPromptChange = (e)=> setModal((m)=> ({ ...m, value: e.target.value }));
@@ -240,22 +293,7 @@ export default function GameRuntime(){
       return;
     }
     if (modal.type === "complete") {
-      // Advance to next mission if any
-      if (mi + 1 < missions.length) {
-        const next = mi + 1;
-        setMi(next);
-        // Reset answers for next mission prompts
-        const init = {};
-        for (const p of (missions[next]?.prompts || [])) init[p.id] = null;
-        setAnswers(init);
-        setGameFinished(false);
-        setModal(null);
-      } else {
-        // No more missions – show finished banner
-        const continueLabel = labelFrom([bundle?.ui?.finishLabel, "Close"]);
-        setGameFinished(true);
-        setModal({ type:"finished", title:"All Missions Complete", message:"You’ve finished the game.", continueLabel });
-      }
+      goToNextMission();
     } else if (modal.type === "finished") {
       setModal(null);
     }
@@ -263,6 +301,8 @@ export default function GameRuntime(){
 
   // Overlays to render for the current mission (or demo if empty)
   const overlays = useMemo(()=> Array.isArray(currentMission.overlays) ? currentMission.overlays : [], [currentMission]);
+  const nextMissionTitle = mi + 1 < missions.length ? sanitizeCopy(missions[mi + 1]?.title) : "";
+  const nextMissionHint = nextMissionTitle;
   // Make sure modalOpen is always defined to avoid runtime errors when referenced elsewhere.
   const modalOpen = Boolean(modal);
   return (
@@ -309,17 +349,19 @@ export default function GameRuntime(){
       <Modal
         open={modal?.type==="complete"}
         title={modal?.title}
-        primaryLabel={modal?.continueLabel || "Continue"}
+        primaryLabel={modal?.continueLabel || ''}
         onPrimary={onContinue}
       >
         <div>{modal?.message}</div>
-        {mi + 1 < missions.length ? <p style={{opacity:0.7, marginTop:8}}>Next: {missions[mi+1]?.title || `Mission ${mi+2}`}</p> : null}
+        {mi + 1 < missions.length && nextMissionHint ? (
+          <p style={{opacity:0.7, marginTop:8}}>Next: {nextMissionHint}</p>
+        ) : null}
       </Modal>
 
       <Modal
         open={modal?.type==="finished"}
         title={modal?.title}
-        primaryLabel={modal?.continueLabel || "Close"}
+        primaryLabel={modal?.continueLabel || ''}
         onPrimary={onContinue}
       >
         <div>{modal?.message}</div>

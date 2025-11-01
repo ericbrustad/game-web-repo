@@ -4,7 +4,6 @@
    If you change table names or shapes, update the TABLES map below.
 */
 
-import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
 // @ts-ignore -- local helper exposes a supabase-compatible client
 import { createClient } from "../../lib/supabase-lite.js";
@@ -18,69 +17,13 @@ const DEFAULT_CHANNEL = process.env.NEXT_PUBLIC_DEFAULT_CHANNEL || "published";
 const DEFAULT_MEDIA_BUCKET = process.env.NEXT_PUBLIC_SUPABASE_MEDIA_BUCKET || "media";
 
 // Centralized table names so you can tweak without digging through code:
-const TABLES = {
+const TABLES = Object.freeze({
   games: "games",
   missions: "missions",
   devices: "devices",
   powerups: "powerups",
   missionMedia: "mission_media", // if you store media relations separately
-} as const;
-
-// ---------- Types (loose; adjust to your schema if needed) ----------
-type GameRow = {
-  id: string;
-  slug: string;
-  channel?: string | null;
-  name?: string | null;
-  appearance?: any;
-  config?: any;
-  map?: any;
-  [k: string]: any;
-};
-
-type MissionRow = {
-  id: string;
-  game_id: string;
-  title?: string;
-  order_index?: number | null;
-  geofence?: any;
-  media?: any; // sometimes missions embed media refs in JSON
-  [k: string]: any;
-};
-
-type DeviceRow = {
-  id: string;
-  game_id: string;
-  kind?: string;
-  config?: any;
-  [k: string]: any;
-};
-
-type PowerupRow = {
-  id: string;
-  game_id: string;
-  kind?: string;
-  config?: any;
-  [k: string]: any;
-};
-
-type MissionMediaRow = {
-  id: string;
-  mission_id: string;
-  path?: string | null; // e.g. "briefcase/lock.png"
-  bucket?: string | null; // e.g. "media"
-  meta?: any;
-  [k: string]: any;
-};
-
-type BundleMedia = {
-  id?: string;
-  bucket: string;
-  path: string;
-  signedUrl?: string;
-  expiresIn?: number;
-  meta?: any;
-};
+});
 
 // ---------- Helpers ----------
 function getServerSupabase() {
@@ -93,44 +36,44 @@ function getServerSupabase() {
   });
 }
 
-function hashETag(obj: any) {
+function hashETag(obj) {
   const json = JSON.stringify(obj);
   return crypto.createHash("sha256").update(json).digest("hex").slice(0, 32);
 }
 
-function boolParam(v: string | string[] | undefined, fallback = false) {
+function boolParam(v, fallback = false) {
   if (typeof v === "string") return ["1", "true", "yes", "on"].includes(v.toLowerCase());
   return fallback;
 }
 
-function numParam(v: string | string[] | undefined, fallback: number) {
+function numParam(v, fallback) {
   const n = typeof v === "string" ? Number(v) : NaN;
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-function collectMediaPathsFromJSON(json: any, acc: BundleMedia[] = [], defaultBucket = DEFAULT_MEDIA_BUCKET) {
+function collectMediaPathsFromJSON(json, acc = [], defaultBucket = DEFAULT_MEDIA_BUCKET) {
   if (!json) return acc;
   if (Array.isArray(json)) {
     for (const item of json) collectMediaPathsFromJSON(item, acc, defaultBucket);
   } else if (typeof json === "object") {
-    const maybePath = (json as any).path;
-    const maybeBucket = (json as any).bucket;
+    const maybePath = json.path;
+    const maybeBucket = json.bucket;
     if (typeof maybePath === "string" && maybePath.trim()) {
       acc.push({
         bucket: typeof maybeBucket === "string" && maybeBucket ? maybeBucket : defaultBucket,
         path: maybePath.trim(),
-        meta: (json as any).meta,
+        meta: json.meta,
       });
     }
     for (const key of Object.keys(json)) {
-      collectMediaPathsFromJSON((json as any)[key], acc, defaultBucket);
+      collectMediaPathsFromJSON(json[key], acc, defaultBucket);
     }
   }
   return acc;
 }
 
-async function signMedia(client: any, media: BundleMedia[], expiresIn: number) {
-  const out: BundleMedia[] = [];
+async function signMedia(client, media, expiresIn) {
+  const out = [];
   for (const item of media) {
     try {
       const { data, error } = await client.storage
@@ -149,21 +92,21 @@ async function signMedia(client: any, media: BundleMedia[], expiresIn: number) {
   return out;
 }
 
-function coerceArray<T>(value: T | T[] | null | undefined): T[] {
+function coerceArray(value) {
   if (!value) return [];
   return Array.isArray(value) ? value : [value];
 }
 
-function normalizeGameRow(data: any, channel: string): GameRow | null {
+function normalizeGameRow(data, channel) {
   if (!data) return null;
   if (Array.isArray(data)) {
     const withChannel = data.find((row) => (row?.channel ?? null) === channel);
     return (withChannel ?? data[0]) ?? null;
   }
-  return data as GameRow;
+  return data;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req, res) {
   const startedAt = Date.now();
 
   if (req.method !== "GET") {
@@ -178,10 +121,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const expiresIn = numParam(req.query.expiresIn, 3600);
   const verbose = boolParam(req.query.verbose, false);
 
-  let client: any;
+  let client;
   try {
     client = getServerSupabase();
-  } catch (error: any) {
+  } catch (error) {
     return res.status(500).json({ ok: false, error: `Supabase init failed: ${error?.message || error}` });
   }
 
@@ -207,12 +150,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     client.from(TABLES.powerups).select("*").eq("game_id", game.id),
   ]);
 
-  const missions = coerceArray<MissionRow>(missionsRes?.data).filter(Boolean);
-  const devices = coerceArray<DeviceRow>(devicesRes?.data).filter(Boolean);
-  const powerups = coerceArray<PowerupRow>(powerupsRes?.data).filter(Boolean);
+  const missions = coerceArray(missionsRes?.data).filter(Boolean);
+  const devices = coerceArray(devicesRes?.data).filter(Boolean);
+  const powerups = coerceArray(powerupsRes?.data).filter(Boolean);
 
   // 3) Optional mission media join (best-effort per mission to avoid missing .in support)
-  const missionMediaRows: MissionMediaRow[] = [];
+  const missionMediaRows = [];
   if (missions.length) {
     for (const mission of missions) {
       try {
@@ -221,7 +164,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .select("*")
           .eq("mission_id", mission.id);
         if (!error && Array.isArray(data)) {
-          missionMediaRows.push(...(data as MissionMediaRow[]));
+          missionMediaRows.push(...data);
         }
       } catch {
         // Table may not exist; ignore
@@ -230,7 +173,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // 4) Collect referenced media paths from JSON fields + missionMedia rows
-  const mediaRefs: BundleMedia[] = [];
+  const mediaRefs = [];
   for (const mission of missions) {
     collectMediaPathsFromJSON(mission, mediaRefs, mediaBucket);
   }
@@ -251,7 +194,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  const deduped = new Map<string, BundleMedia>();
+  const deduped = new Map();
   for (const ref of mediaRefs) {
     const key = `${ref.bucket}::${ref.path}`;
     if (!deduped.has(key)) {
@@ -273,7 +216,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       signed: includeSigned,
       signedExpiresIn: includeSigned ? expiresIn : 0,
       generatedAt: new Date().toISOString(),
-      elapsedMs: undefined as number | undefined,
+      elapsedMs: undefined,
       tables: TABLES,
       source: "supabase",
     },
