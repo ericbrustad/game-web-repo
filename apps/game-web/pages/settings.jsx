@@ -309,6 +309,26 @@ export async function getServerSideProps() {
       message:
         'Replaced GameMap with the Mapbox v3.13.0 baseline loader, simplifying the integration back to a single-map bootstrap while keeping the Settings metadata intact for verification.',
     },
+    {
+      speaker: 'Operator',
+      message:
+        'Strip the mission complete defaults so only admin-authored copy appears, gate it behind NEXT_PUBLIC_HIDE_DEMO_COPY, and make the player app honor admin-provided text.',
+    },
+    {
+      speaker: 'GPT',
+      message:
+        'Introduced the hide-demo flag helper, removed the Mission Complete / Nice work fallbacks, auto-advanced when no admin copy exists, and logged this update so the Settings transcript captures our coordination.',
+    },
+    {
+      speaker: 'Operator',
+      message:
+        'Remove every trace of the demo Mission Complete messaging, rely solely on admin-provided copy, and fix the Next.js build error caused by TypeScript-only syntax in the bundle API.',
+    },
+    {
+      speaker: 'GPT',
+      message:
+        'Stripped the Mission Complete defaults so only admin copy renders, updated the modal flow to skip when no label exists, converted the bundle API to plain JavaScript, and confirmed the Settings snapshot still surfaces the repo, branch, commit, deployment, and timestamp.',
+    },
   ];
 
   return {
